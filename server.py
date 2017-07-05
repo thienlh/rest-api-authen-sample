@@ -3,10 +3,11 @@
     Simulate a simple HTTP server with signature-base authentication
 """
 
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
-import urlparse
-import urllib
+import urllib.parse
+import urllib.request
+import urllib.error
 import csv
 import datetime
 import utils
@@ -27,10 +28,10 @@ class S(BaseHTTPRequestHandler):
             Handle GET requests
         """
         # get request parameters
-        query = urlparse.urlparse(self.path).query
+        query = urllib.parse.urlparse(self.path).query
         parameters = dict(qc.split("=") for qc in query.split("&"))
         key_pairs = {}
-        print parameters
+        print(parameters)
 
         # read credentials into dictionary
         with open('credentials.csv', 'rb') as csv_file:
@@ -41,27 +42,27 @@ class S(BaseHTTPRequestHandler):
         public_key = parameters['publicKey']
 
         # decode the time stamp from request
-        time_stamp = urllib.unquote(parameters['timeStamp'])
+        time_stamp = urllib.parse.unquote(parameters['timeStamp'])
 
         # parse the requested time to compare with current server time
         requested_time = datetime.datetime.strptime(
             time_stamp, "%Y-%m-%dT%H:%M:%S+00:00")
-        print "Requested time: ", requested_time
+        print("Requested time: ", requested_time)
         # different in seconds between current time and requested time
         second_diff = (datetime.datetime.utcnow() - requested_time).seconds
 
-        print "Remain second(s): ", 60 - second_diff
+        print("Remain second(s): ", 60 - second_diff)
 
         # response 408 if the request is timeout
         if second_diff > 60:
-            print "Signature timeout!"
+            print("Signature timeout!")
             self._set_headers(408)
             self.wfile.write(
                 "<html><body><h1>REJECTED</h1><p>Request timeout</p></body></html>")
             return
 
         # decode the signature from request
-        signature = urllib.unquote(parameters['signature'])
+        signature = urllib.parse.unquote(parameters['signature'])
         value = parameters['value']
 
         try:
@@ -71,21 +72,21 @@ class S(BaseHTTPRequestHandler):
             # generate server's signature
             server_signature = utils.generate_hmac(
                 secret_key, public_key, "GET", value, time_stamp)
-            print "Server signature: " + server_signature
-            print "Signature: " + signature
+            print("Server signature: " + server_signature)
+            print("Signature: " + signature)
         except KeyError:
-            print "Public key does not exist"
+            print("Public key does not exist")
             server_signature = '-1'
 
         if signature == server_signature:
             # request accepted
-            print "Request accepted!"
+            print("Request accepted!")
             self._set_headers(200)
             self.wfile.write(
                 "<html><body><h1>SUCCESS</h1><p>Request allowed</p></body></html>")
         else:
             # request denied
-            print "Request denied!"
+            print("Request denied!")
             self._set_headers(403)
             self.wfile.write(
                 "<html><body><h1>DENIED</h1><p>Request denied!</p></body></html>")
@@ -97,7 +98,7 @@ def run(server_class=HTTPServer, handler_class=S, port=9394):
     """
     server_address = ('', port)
     httpd = server_class(server_address, handler_class)
-    print 'Server started on port 9394...'
+    print('Server started on port 9394...')
     httpd.serve_forever()
 
 

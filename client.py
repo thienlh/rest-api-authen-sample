@@ -1,7 +1,9 @@
 """Construct a simple HTTP GET request and send it to the dummy server"""
 
 import argparse
-import urllib
+import urllib.request
+import urllib.parse
+import urllib.error
 import datetime
 import utils
 
@@ -12,20 +14,21 @@ def send_request(secret_key, public_key, value):
     """
     # get current utc time as time stamp
     time_stamp = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S+00:00")
+
     # generate the signature
     signature = utils.generate_hmac(secret_key, public_key, "GET", value, time_stamp)
 
     # construct the request
     signed_request = "http://localhost:9394?value=" + value + \
                      "&publicKey=" + public_key + \
-                     "&signature=" + urllib.quote(signature) + \
-                     "&timeStamp=" + urllib.quote(time_stamp)
+                     "&signature=" + urllib.parse.quote(signature) + \
+                     "&timeStamp=" + urllib.parse.quote(time_stamp)
 
-    print "Signed request: " + signed_request + "\n"
+    print("Signed request: " + signed_request + "\n")
 
     # send to server and print response
-    print "Response: "
-    print urllib.urlopen(signed_request).read()
+    print("Response: ")
+    print(urllib.request.urlopen(signed_request).read())
 
 
 if __name__ == '__main__':
@@ -40,7 +43,7 @@ if __name__ == '__main__':
     #                     help='sum the integers (default: find the max)')
     args = vars(parser.parse_args())
 
-    print args
+    print(args)
 
     # send request
     send_request(args['secret-key'], args['public-key'], args['value'])
