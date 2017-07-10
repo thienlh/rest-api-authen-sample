@@ -1,3 +1,4 @@
+# !/usr/bin/env python
 """Construct a simple HTTP GET request and send it to the dummy server"""
 
 import argparse
@@ -16,7 +17,8 @@ def send_request(secret_key, public_key, value):
     time_stamp = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S+00:00")
 
     # generate the signature
-    signature = utils.generate_hmac(secret_key, public_key, "GET", value, time_stamp)
+    signature = utils.generate_hmac(
+        secret_key, public_key, "GET", value, time_stamp)
 
     # construct the request
     signed_request = "http://localhost:9394?value=" + value + \
@@ -33,7 +35,8 @@ def send_request(secret_key, public_key, value):
 
 if __name__ == '__main__':
     # parse the command line arguments
-    parser = argparse.ArgumentParser(description='Rest API authentication demo.')
+    parser = argparse.ArgumentParser(
+        description='Rest API authentication demo.')
     parser.add_argument('public-key', type=str, help='Public key')
     parser.add_argument('secret-key', type=str, help='Secret key')
     parser.add_argument('value', type=str, help='Some demo value')

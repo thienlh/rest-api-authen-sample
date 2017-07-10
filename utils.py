@@ -1,3 +1,4 @@
+# !/usr/bin/env python
 """
     Utilities for generating HMAC signature
 """
